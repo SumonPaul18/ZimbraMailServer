@@ -1,0 +1,19 @@
+#check mail queue:
+
+/opt/zimbra/common/sbin/postqueue -p
+
+#check mail re-queue
+
+/opt/zimbra/common/sbin/postsuper -r ALL
+
+#switch zimbra user
+
+su zimbra
+
+#check status
+
+zmcontrol status
+
+#restart zimbra services
+
+zmcontrol restart

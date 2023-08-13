@@ -1,0 +1,168 @@
+
+#### How to integrate zimbra mail with jitsi meet.
+
+++++++++++++++++++++++++++
+### 1st configuration in zimbra mail server:
+++++++++++++++++++++++++++
+
+## 1st check zimbra ldap status
+
+su zimbra
+
+ldap status
+
+# 2nd check zimbra status
+
+zmcontrol status
+
+#3rd check process slapd
+
+ps auxww | grep zimbra | grep slapd
+
+#4th install slapd
+
+apt install slapd -y
+
+#5th install ldap-utils
+
+apt install ldap-utils -y
+
+# 6th ldapsearch
+
+ldapsearch -x -LLL -b dc=aamranetworks,dc=net
+
+ldapsearch -x -h zmail2.aamranetworks.net -b "dc=aamranetworks,dc=net" '(uid=sumon)'
+
+# 7th check ldap syntax
+
+slapcat
+
+# 8th install 3rd party LdapAdmin software on windows for show user path
+
+https://sourceforge.net/projects/ldapadmin/
+
+# extract > open > connect > new connect:
+
+connection name: xyz
+host:zmail2.aamranetworks.net
+base: dc=aamranetworks,dc=net
+
+# uncheck: Anonymous connection
+
+# Now give ldpa default root username and pass:
+
+username: cn=config
+pass:********
+
+#note: password collect from zimbra ldap configuration:
+
+su zimbra
+
+# 1 ways
+
+zmlocalconfig -s ldap_root_password
+
+# 2 ways
+
+zmlocalconfig -s | grep 'ldap_' | egrep 'password|url'
+
+# 3 ways get ldap all configuration
+
+cd /opt/zimbra/bin/
+
+./zmlocalconfig -s | grep ldap
+
+# 9th now double click on ldap connect name:
+
+> expand: ou=people > select any user > click: search icon:
+
+copy path: uid=sumon,ou=people,dc=aamranetworks,dc=net
+
+# 10th Install Zimlet Jitsi Meet
+
+apt install zimbra-zimlet-jitsi -y
+
+su - zimbra
+
+nano /opt/zimbra/zimlets-deployed/zimbra-zimlet-jitsi/config_template.xml
+
+<global>
+<property name="jitsiUrl">https://meeting.aamranetworks.net</property>
+</global>
+
+zmzimletctl configure config_template.xml
+
+zmprov fc all
+
+++++++++++++++++++++++++
+### 2nd configuration in jitsi meet server:
+++++++++++++++++++++++++
+
+nano /etc/prosody/conf.avail/ldap.cfg.lua
+
+# Add bellow lines:
+
+authentication = 'ldap2'
+
+ldap = {
+  hostname = 'zmail2.aamranetworks.net',
+  bind_dn = 'uid=sumon,ou=people,dc=aamranetworks,dc=net',
+  bind_password = 'aamra123##',
+ -- use_tls = true,
+  user = {
+    usernamefield = 'uid',
+    basedn = 'DC=aamranetworks,DC=net',
+    namefield = 'uid',
+  },
+}
+
+
+nano /etc/prosody/conf.avail/meeting.aamranetworks.net.cfg.lua
+
+# Edit this line:
+
+        authentication = "anonymous"
+To
+
+        authentication = "ldap2"
+
+# This configuration tells Jitsi Meet to force username and password authentication before allowing conference room creation by a new visitor.
+
+Then, in the same file, add the bellow lines to the end of the file:
+
+
+VirtualHost "guest.meeting.aamranetworks.net"
+    authentication = "anonymous"
+    c2s_require_encryption = false
+
+# Open another configuration file at /etc/jitsi/meet/jitsi.your_domain-config.js with a text editor:
+
+nano /etc/jitsi/meet/meeting.aamranetworks.net-config.js
+
+# Edit this line:
+
+        // anonymousdomain: 'guest.jitsi.your_domain',
+To:
+
+        anonymousdomain: 'guest.meeting.aamranetworks.net',
+
+# Next, open /etc/jitsi/jicofo/sip-communicator.properties:
+
+nano /etc/jitsi/jicofo/sip-communicator.properties
+
+# And add the following line to complete the configuration changes:
+
+org.jitsi.jicofo.auth.URL=XMPP:meeting.aamranetworks.net (jitsi server FQDN)
+
+nano /etc/prosody/prosody.cfg.lua
+
+# And add the following line to complete the configuration changes
+
+consider_bosh_secure = true
+
+# restart jitsi services
+
+systemctl restart prosody jicofo jitsi-videobridge2 nginx
+
++++++++++++++++++ End Configuration +++++++++++++++++
+
