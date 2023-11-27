@@ -1,10 +1,3 @@
-#check mail queue:
-
-/opt/zimbra/common/sbin/postqueue -p
-
-#check mail re-queue
-
-/opt/zimbra/common/sbin/postsuper -r ALL
 
 #switch zimbra user
 
@@ -13,6 +6,27 @@ su zimbra
 #check status
 
 zmcontrol status
+
+#check mail queue:
+
+/opt/zimbra/common/sbin/postqueue -p
+
+#all queue mail re-queue:
+
+/opt/zimbra/common/sbin/postsuper -r ALL
+
+#identified compromissed mail user
+
+cat /var/log/zimbra.log | sed -n 's/.*sasl_username=//p' | sort | uniq -c | sort -n
+
+#delete specific user queue mail
+
+/opt/zimbra/common/sbin/mailq |grep user@example.com |awk {'print $1'} |grep -v @ | tr -d '*!'|/opt/zimbra/common/sbin/postsuper -d -
+
+#OR
+
+/opt/zimbra/common/sbin/postqueue -p | tail -n +2 | awk 'BEGIN { RS = "" } / user@example\.com/ { print $1 }' | tr -d '*' | /opt/zimbra/common/sbin/postsuper -d -
+
 
 #restart zimbra services
 
