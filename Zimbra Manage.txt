@@ -9,11 +9,33 @@ zmcontrol status
 
 #check mail queue:
 
+mailq
+
+or
+
+postqueue -p
+
+#In Zimbra
+
 /opt/zimbra/common/sbin/postqueue -p
 
 #all queue mail re-queue:
 
+postqueue -f
+
+or
+
+#In Zimbra
+
 /opt/zimbra/common/sbin/postsuper -r ALL
+
+#purge mail queue:
+
+postsuper -d
+
+postsuper -d [message id
+
+postsuper -d ALL
 
 #identified compromissed mail user
 
@@ -31,3 +53,17 @@ cat /var/log/zimbra.log | sed -n 's/.*sasl_username=//p' | sort | uniq -c | sort
 #restart zimbra services
 
 zmcontrol restart
+
+#List all zimbra mail accounts
+
+su - zimbra
+
+zmaccts
+
+#how to locked to unlock zimbra account
+#(account is closed,inactive for use same command)
+
+su - zimbra
+
+zmprov ma username@domain.com zimbraAccountStatus active
+
