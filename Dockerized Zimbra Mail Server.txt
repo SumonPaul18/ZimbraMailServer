@@ -1,0 +1,252 @@
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ #How to Configure Zimbra Mail Server on Docker-Container +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++
++ RockyLinux +
+++++++++++++++
+
+SOLUTION:
+sudo systemctl stop systemd-resolved
+sudo systemctl disable systemd-resolved
+
+SOLUTION:
+sudo systemctl start systemd-resolved
+sudo systemctl enable systemd-resolved
+
+#docker run --rm -dit --name zimbra -h mail.paulco.xyz rockylinux
+
+docker run --rm -dit --name zimbra -h mail.paulco.xyz centos /sbin/init
+
+docker run --rm -dit --name zimbra -h mail.paulco.xyz --add-host=mail.paulco.xyz:172.17.0.2 -p 53:53/udp -p 80:80 -p 8080:8080 -p 443:443 -p 25:25 -p 465:465 -p 587:587 -p 993:993 -p 995:995 -p 7071:7071 -p 8443:8443 -p 7143:7143 -p 7110:7110 centos
+
+docker ps
+
+docker exec -it zimbra bash
+
+yum update -y
+
+#if you get this:
+Error: “Error: Failed to download metadata for repo ‘appstream’: Cannot prepare internal mirrorlist: No URLs in mirrorlist”
+
+#How to Fix Error: Failed to Download Metadata for Repo ‘AppStream’
+
+1. sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+2. sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+
+yum update -y
+yum install nano -y
+yum install wget -y
+yum install tar -y
+yum install unzip net-tools sysstat openssh-clients perl-core libaio nmap-ncat libstdc++ -y
+
+#Installing dnsmasq:
+
+yum install dnsmasq -y
+
+#service status dnsmasq
+#systemctl start dnsmasq
+#systemctl enable dnsmasq
+
+#Configuring dnsmasq:
+cp /etc/dnsmasq.conf /etc/dnsmasq.conf.bac
+
+nano /etc/dnsmasq.conf
+
+#Add following lines
+
+server=8.8.8.8
+domain=paulco.xyz
+mx-host=paulco.xyz,mail.paulco.xyz,10
+listen-address=::1,127.0.0.1,172.17.0.2
+address=/paulco.xyz/127.0.0.1
+address=/paulco.xyz/172.17.0.2
+#additional settings
+#host-record=iotlogy.xyz,192.168.205.11
+#host-record=mail.iotlogy.xyz,192.168.205.11
+
+dnsmasq --test
+
+#Edit /etc/resolv.conf
+
+tee /etc/resolv.conf << END
+nameserver 127.0.0.1
+nameserver 172.24.0.2
+END
+
+#chattr +i /etc/resolv.conf
+
+#Defining DNS Hosts and Names and Testing Local DNS:
+
+nano /etc/hosts
+
+systemctl restart dnsmasq
+
+sudo firewall-cmd --add-service=dns --permanent
+sudo firewall-cmd --add-service=dhcp --permanent
+sudo firewall-cmd --reload
+
+yum install bind-utils -y
+
+#Check DNS & MX record from locally in mail server:
+dig paulco.xyz mx
+dig paulco.xyz any
+dig +short MX paulco.xyz
+dig +short A paulco.xyz
+
+host -t mx paulco.xyz
+host -t a mail.paulco.xyz
+
+#Now Install Zimbra
+
+nano /etc/selinux/config
+
+SELINUX=disabled
+
+
+wget https://files.zimbra.com/downloads/8.8.15_GA/zcs-8.8.15_GA_4362.RHEL8_64.20220721104405.tgz
+
+tar xvzf zcs-8.8.15_GA_4362.RHEL8_64.20220721104405.tgz
+
+mv zcs-8.8.15_GA_4362.RHEL8_64.20220721104405 zcs
+
+cd zcs
+
+./install.sh
+
+#Assign a New Port Mapping to a Running Container
+#First, we’ll stop our Docker container and create its image using the docker commit command:
+
+docker stop zimbra
+
+docker commit zimbra myzimbra
+
+#remove previous container
+#docker rm httpd-container
+
+#Re Mapping port with existing container.
+docker run -d -p 83:80 --name httpd-container httpd-image
+
++++++++++++++++++++++++++++++ Complete +++++++++++++++++++++++++++++++++
+
++++++++++++++++++++++++++++ Create Zimbra Dockerfile ++++++++++++++++++++++++++
+
+#Create zimbra configuration files
+
+mkdir -p /opt/zimbra
+
+#Build the Zimbra Docker Image
+
+#Create the Dockerfile.
+
+nano /opt/zimbra/zimbraserver.dockerfile
+
+#2. Copy the contents below into the Dockerfile.
+
++++++++++++++++++++++++++++++ End Dockerfile +++++++++++++++++++++++++++++
+
+#Base Bind9 Image
+
+FROM centos
+
+#Install required tools and dependencies
+
+#How to Fix Error: Failed to Download Metadata for Repo ‘AppStream’
+
+RUN sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+RUN sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+
+RUN yum -y update && yum -y install \    
+        nano \  
+        bind-utils \ 
+        wget \
+        tar \
+	unzip \ net-tools
+	sysstat \
+	openssh-clients \
+	perl-core \
+	libaio \
+	nmap-ncat \
+	libstdc++ \
+	epel-release \
+	screen
+
+RUN wget https://files.zimbra.com/downloads/8.8.15_GA/zcs-8.8.15_GA_4362.RHEL8_64.20220721104405.tgz
+
+RUN tar xvzf zcs-8.8.15_GA_4362.RHEL8_64.20220721104405.tgz
+
+RUN mv zcs-8.8.15_GA_4362.RHEL8_64.20220721104405 zcs
+
+WORKDIR /root/zcs
+
+
+
+
+
+#Copy Zimbra configuration files
+#COPY configuration/named.conf.options /etc/bind/
+#COPY configuration/named.conf.local /etc/bind/
+#COPY configuration/db.paulco.xyz /etc/bind/zones/
+
+# Expose Ports
+
+# Start the Name Service
+
+#CMD ["/usr/sbin/named", "-g", "-c", "/etc/bind/named.conf", "-u", "bind"]
+
++++++++++++++++++++++++++++++ End Dockerfile +++++++++++++++++++++++++++++
+
+#3. Build and tag the BIND image using the command below.
+
+docker build -t myzimbra . -f zimbraserver.dockerfile
+
++++++++++++++++++++++++++++++ Complete +++++++++++++++++++++++++++++++++
+
+
++++++++++++++++++++++++++++++ Complete +++++++++++++++++++++++++++++++++
+
+++++++++++
++ Ubuntu +
+++++++++++
+docker run --rm -dit --name zimbra -h mail.paulco.xyz  ubuntu:20.04
+
+#docker run --rm -dit --name ubuntu-nginx -h mail --add-host=mail.paulco.xyz:172.17.0.3 -p 81:81 ubuntu
+
+docker ps
+
+docker exec -it zimbra bash
+
+hostname
+hostname -f
+
+apt update
+
+apt install nano -y 
+apt install iputils-ping -y
+apt install wget -y
+
+wget https://files.zimbra.com/downloads/8.8.15_GA/zcs-8.8.15_GA_4179.UBUNTU20_64.20211118033954.tgz
+
+
+
+tar xvzf zcs-8.8.15_GA_4179.UBUNTU20_64.20211118033954.tgz
+
+mv zcs-8.8.15_GA_4179.UBUNTU20_64.20211118033954 zcs
+
+cd zcs
+
+./install.sh
+
++++++++++++++++++++++++++++++ Complete +++++++++++++++++++++++++++++++++
+
+Extra:
+
+#Selinux in Container
+yum install policycoreutils selinux-policy-targeted
+
+sestatus
+
+#Error
+netstat -tunl | grep 389
+
+
+

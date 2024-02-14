@@ -1,4 +1,6 @@
 
+curl ipinfo.io/ip
+
 #switch zimbra user
 
 su zimbra
@@ -54,6 +56,7 @@ cat /var/log/zimbra.log | sed -n 's/.*sasl_username=//p' | sort | uniq -c | sort
 
 zmcontrol restart
 
+-----------------------------
 #List all zimbra mail accounts
 
 su - zimbra
@@ -66,4 +69,115 @@ zmaccts
 su - zimbra
 
 zmprov ma username@domain.com zimbraAccountStatus active
+
+---------------X------------
+#When a zimbra server unwanted have shutdown or restarted.
+Then can't be start automatically and show a error message
+is zimbra disk volumes hasn't no space.
+
+#Solution:
+
+su zimbra 
+uptime
+zmcontrol status
+df -h
+lsblk
+zmcontrol stop
+zmcontrol start
+zmcontrol status
+
+#now start the zimber services.
+
+---------------X------------
+
+----------------------------
+
+Zimbra command to check Mailbox Size :
+
+su – zimbra
+
+#zmprov gmi user@maildomain
+zmprov gmi sathish@www.sathish.com
+
+#To check User mailbox Size information in detail. 
+
+#show only mailbox size
+zmmailbox -z -m testuser@example.com gms 
+
+#show specific directory size in detail
+zmmailbox -z -m testuser@example.com gaf 
+
+#use this command for query all accounts in my Zimbra server.
+zmprov -l gaa 
+
+#List all accounts in zimbra. This is additional.
+zmaccts
+
+-------------------------------
+Create a new files you can name it allmailboxsize.sh or what ever you wanted then paste this. Make sure you have logged in as zimbra
+
+#!/bin/bash
+all_account=`zmprov -l gaa`;
+for account in ${all_account}
+do
+    mb_size=`zmmailbox -z -m ${account} gms`;
+    echo "Mailbox size of ${account} = ${mb_size}";
+done
+Change the permission and run the script.
+# chmod 755 allmailboxsize.sh
+# ./allmailboxsize.sh
+-----------------------------------
+
+#Get all user's mailbox size from CLI
+https://wiki.zimbra.com/wiki/Get_all_user%27s_mailbox_size_from_CLI
+
+----------------X------------------
+#just create a new files you can name it checkmailsize.sh or what ever you wanted then paste this
+
+#!/bin/bash
+all_account=`zmprov gaa`;
+for account in ${all_account}
+do
+    mb_size=`zmmailbox -z -m ${account} gms`;
+    echo "Mailbox size of ${account} = ${mb_size}";
+done
+# su zimbra
+
+# vim checkmailsize.sh
+
+# chmod 755
+
+# ./checkmailsize.sh
+
+----------------------X------------------
+
+#Convert Size to Human-Readable Format:
+
+zmmailbox -z -m user@example.com gms | awk '/mailbox size/{print $3/1024/1024 " MB"}'
+
+#Managing spam mails in Zimbra mail server
+
+https://sathisharthars.wordpress.com/2013/11/11/managing-spam-mails-in-zimbra-mail-server/
+
+-----------------X--------------------
+#Deleting messages from account using the CLI
+
+#The bellow command will search a specific folder, Inbox in this case. Displays only messages dated 01/01/2024. Lists up to 50 messages.
+
+zmmailbox -z -m user@domain.com s -t message -l 50 "in:inbox date:01/01/2024"
+
+#You will see something like the following after issuing the above command:
+
+Id	Type	From	Subject	Date
+
+#delete now specific msgid 431
+
+zmmailbox -z -m admin@william3.us.zimbralab.com deleteMessage 431
+
+
+-----------------X--------------------
+
+#Restrict Admin View Email
+
+https://wiki.zimbra.com/wiki/Restrict_Admin_%27View_Mail%27
 
