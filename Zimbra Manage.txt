@@ -1,4 +1,10 @@
 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ How To Manage User Account With CLI In Zimbra Mail Server  +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+#Check IP Information using command
+
 curl ipinfo.io/ip
 
 #switch zimbra user
@@ -9,7 +15,23 @@ su zimbra
 
 zmcontrol status
 
-#check mail queue:
+#Create a single email account.
+#Syntax:
+#zmprov ca <email_address> <password>
+
+zmprov ca sumon@mydomain.com 123456
+
+#Delete Zimbra users from CLI.
+#Syntax:
+#zmprov da <email_address>
+
+zmprov da sumon@mydomain.com
+
+#Change user password from CLI
+
+zmprov sp sumon@mydomain.com 1234567%$123Abc
+
+#Check mail queue in zimbra:
 
 mailq
 
@@ -17,11 +39,11 @@ or
 
 postqueue -p
 
-#In Zimbra
+or 
 
 /opt/zimbra/common/sbin/postqueue -p
 
-#all queue mail re-queue:
+#All queue mail re-queue:
 
 postqueue -f
 
@@ -39,38 +61,65 @@ postsuper -d [message id
 
 postsuper -d ALL
 
+#Find out user generating the spam mail
+
+#./postqueue -p | awk ‘/sathish@www.sathish.com/ {print $1}’ > /tmp/x
+
+#./postsuper -d  < /tmp/x
+
 #identified compromissed mail user
 
 cat /var/log/zimbra.log | sed -n 's/.*sasl_username=//p' | sort | uniq -c | sort -n
 
-#delete specific user queue mail
 
-/opt/zimbra/common/sbin/mailq |grep user@example.com |awk {'print $1'} |grep -v @ | tr -d '*!'|/opt/zimbra/common/sbin/postsuper -d -
+#Delete specific user queue mail
+#Run this command as Root User. 
+
+/opt/zimbra/common/sbin/mailq |grep shakil.hossen@reverie-bd.com|awk {'print $1'} |grep -v @ | tr -d '*!'|/opt/zimbra/common/sbin/postsuper -d -
 
 #OR
 
-/opt/zimbra/common/sbin/postqueue -p | tail -n +2 | awk 'BEGIN { RS = "" } / user@example\.com/ { print $1 }' | tr -d '*' | /opt/zimbra/common/sbin/postsuper -d -
+/opt/zimbra/common/sbin/postqueue -p | tail -n +2 | awk 'BEGIN { RS = "" } /shakil.hossen@reverie-bd.com/ { print $1 }' | tr -d '*' | /opt/zimbra/common/sbin/postsuper -d -
+
+#Or
+
+/opt/zimbra/common/sbin/postqueue -p |egrep -v '^ *\(|-Queue ID-' | awk 'BEGIN { RS = "" } { if ($7 == "shakil.hossen@reverie-bd.com") print $1} '| tr -d '*!'| /opt/zimbra/common/sbin/postsuper -d -
+
+#Delete ALL Messages From The deferred queue.
+
+/opt/zimbra/common/sbin/postsuper -d ALL deferred
 
 
 #restart zimbra services
 
 zmcontrol restart
 
------------------------------
-#List all zimbra mail accounts
+++++++++++++++++++++++++++++++++++++
++ List all zimbra mail accounts    +
+++++++++++++++++++++++++++++++++++++
 
 su - zimbra
 
 zmaccts
 
-#how to locked to unlock zimbra account
+#List all admin accounts
+zmprov -l gaaa
+
+#Set a regular to admin user
+zmprov ma sumon@mydomain.com zimbraIsAdminAccount TRUE
+
+#Remove an admin account to regular account
+zmprov ma sumon@mydomain.com zimbraIsAdminAccount FALSE
+
+#how to locked to unlock zimbra user.
 #(account is closed,inactive for use same command)
 
 su - zimbra
 
 zmprov ma username@domain.com zimbraAccountStatus active
 
----------------X------------
++++++++++++++++X++++++++++++++++++
+
 #When a zimbra server unwanted have shutdown or restarted.
 Then can't be start automatically and show a error message
 is zimbra disk volumes hasn't no space.
@@ -88,30 +137,46 @@ zmcontrol status
 
 #now start the zimber services.
 
----------------X------------
+---------------X----------------------------
 
-----------------------------
+++++++++++++++++++++++++++++++++++++++++++++
++ Automatic Fixed Problem using zmfixperms +
+++++++++++++++++++++++++++++++++++++++++++++
 
-Zimbra command to check Mailbox Size :
+/opt/zimbra/libexec/zmfixperms -e -v
+
+++++++++++++++++++++++++++++++++++++++
++ Check Mailbox Size in Zimbra User  +
+++++++++++++++++++++++++++++++++++++++
 
 su – zimbra
 
 #zmprov gmi user@maildomain
+
 zmprov gmi sathish@www.sathish.com
 
 #To check User mailbox Size information in detail. 
-
 #show only mailbox size
+
 zmmailbox -z -m testuser@example.com gms 
 
 #show specific directory size in detail
+
 zmmailbox -z -m testuser@example.com gaf 
 
 #use this command for query all accounts in my Zimbra server.
+
 zmprov -l gaa 
 
 #List all accounts in zimbra. This is additional.
+
 zmaccts
+
++++++++++++++++++++++++++++++++++++
++ Check Audit Log in Zimbra User  +
++++++++++++++++++++++++++++++++++++
+
+tail -f /opt/zimbra/log/audit.log | grep user@domain.com
 
 -------------------------------
 Create a new files you can name it allmailboxsize.sh or what ever you wanted then paste this. Make sure you have logged in as zimbra
