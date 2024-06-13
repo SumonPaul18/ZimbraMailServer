@@ -1,9 +1,9 @@
 #
 # Manage Zimbra Mail Server Using Command Line
 #
-
-# Check IP Information using command
-curl ipinfo.io/ip
+Check IP Information using command
+####
+    curl ipinfo.io/ip
 ####
 Switch to Zimbra User
 ####
