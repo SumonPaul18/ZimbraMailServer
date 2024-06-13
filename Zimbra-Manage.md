@@ -32,14 +32,10 @@ Change user password from CLI
 Check mail queue in zimbra:
 ####
     mailq
-<br>
 or
-
 ####
     postqueue -p
-<br>
 or 
-
 ####
     /opt/zimbra/common/sbin/postqueue -p
 ####
@@ -56,99 +52,95 @@ In Zimbra
 Purge Mail Queue:
 ####
     postsuper -d
-
-postsuper -d [message id
-
-postsuper -d ALL
-
-#Find out user generating the spam mail
+####
+Purge specefic Mail Queue:
+####
+    postsuper -d [message id
+####
+Purge all Mail Queue:
+####
+    postsuper -d ALL
+####
+Find out spaming mail generated users 
 
 #./postqueue -p | awk ‘/sathish@www.sathish.com/ {print $1}’ > /tmp/x
-
 #./postsuper -d  < /tmp/x
-
-#identified compromissed mail user
-
-cat /var/log/zimbra.log | sed -n 's/.*sasl_username=//p' | sort | uniq -c | sort -n
-
-
-#Delete specific user queue mail
-#Run this command as Root User. 
-
-/opt/zimbra/common/sbin/mailq |grep shakil.hossen@reverie-bd.com|awk {'print $1'} |grep -v @ | tr -d '*!'|/opt/zimbra/common/sbin/postsuper -d -
-
-#OR
-
-/opt/zimbra/common/sbin/postqueue -p | tail -n +2 | awk 'BEGIN { RS = "" } /shakil.hossen@reverie-bd.com/ { print $1 }' | tr -d '*' | /opt/zimbra/common/sbin/postsuper -d -
-
-#Or
-
-/opt/zimbra/common/sbin/postqueue -p |egrep -v '^ *\(|-Queue ID-' | awk 'BEGIN { RS = "" } { if ($7 == "shakil.hossen@reverie-bd.com") print $1} '| tr -d '*!'| /opt/zimbra/common/sbin/postsuper -d -
-
-#Delete ALL Messages From The deferred queue.
-
-/opt/zimbra/common/sbin/postsuper -d ALL deferred
-
-
-#restart zimbra services
-
-zmcontrol restart
-
-++++++++++++++++++++++++++++++++++++
-+ List all zimbra mail accounts    +
-++++++++++++++++++++++++++++++++++++
-
-su - zimbra
-
-zmaccts
-
-#List all admin accounts
-zmprov -l gaaa
-
-#Set a regular to admin user
-zmprov ma sumon@mydomain.com zimbraIsAdminAccount TRUE
-
-#Remove an admin account to regular account
-zmprov ma sumon@mydomain.com zimbraIsAdminAccount FALSE
-
-#how to locked to unlock zimbra user.
-#(account is closed,inactive for use same command)
-
-su - zimbra
-
-zmprov ma username@domain.com zimbraAccountStatus active
-
-+++++++++++++++X++++++++++++++++++
-
-#When a zimbra server unwanted have shutdown or restarted.
-Then can't be start automatically and show a error message
-is zimbra disk volumes hasn't no space.
-
-#Solution:
-
-su zimbra 
-uptime
-zmcontrol status
-df -h
-lsblk
-zmcontrol stop
-zmcontrol start
-zmcontrol status
-
-#now start the zimber services.
-
----------------X----------------------------
-
-++++++++++++++++++++++++++++++++++++++++++++
-+ Automatic Fixed Problem using zmfixperms +
-++++++++++++++++++++++++++++++++++++++++++++
-
-/opt/zimbra/libexec/zmfixperms -e -v
-
-++++++++++++++++++++++++++++++++++++++
-+ Check Mailbox Size in Zimbra User  +
-++++++++++++++++++++++++++++++++++++++
-
+####
+Identified Compromissed Mail User
+####
+    cat /var/log/zimbra.log | sed -n 's/.*sasl_username=//p' | sort | uniq -c | sort -n
+####
+Delete specific user queue mail:<br>
+Run this command as Root User 
+####
+    /opt/zimbra/common/sbin/mailq |grep shakil.hossen@reverie-bd.com|awk {'print $1'} |grep -v @ | tr -d '*!'|/opt/zimbra/common/sbin/postsuper -d -
+####
+OR
+####
+    /opt/zimbra/common/sbin/postqueue -p | tail -n +2 | awk 'BEGIN { RS = "" } /shakil.hossen@reverie-bd.com/ { print $1 }' | tr -d '*' | /opt/zimbra/common/sbin/postsuper -d -
+####
+OR
+####
+    /opt/zimbra/common/sbin/postqueue -p |egrep -v '^ *\(|-Queue ID-' | awk 'BEGIN { RS = "" } { if ($7 == "shakil.hossen@reverie-bd.com") print $1} '| tr -d '*!'| /opt/zimbra/common/sbin/postsuper -d -
+####
+Delete ALL Messages From The deferred queue.
+####
+    /opt/zimbra/common/sbin/postsuper -d ALL deferred
+####
+Restart Zimbra Services
+####
+    zmcontrol restart
+####
+List all zimbra mail accounts
+####
+    su - zimbra
+####
+    zmaccts
+####
+List all admin accounts
+####
+    zmprov -l gaaa
+####
+Set a regular to admin user
+####
+    zmprov ma sumon@mydomain.com zimbraIsAdminAccount TRUE
+####
+Remove an admin account to regular account
+####
+    zmprov ma sumon@mydomain.com zimbraIsAdminAccount FALSE
+####
+how to locked to unlock zimbra user <br>
+Account is closed,inactive for use same command
+####
+    su - zimbra
+####
+    zmprov ma username@domain.com zimbraAccountStatus active
+####
+When a zimbra server unwanted have shutdown or restarted <br>
+Then can't be start automatically and show a error message <br>
+is zimbra disk volumes hasn't no space
+####
+<b>Solution:</b>
+####
+    su zimbra 
+    uptime
+    zmcontrol status
+    df -h
+    lsblk
+    zmcontrol stop
+    zmcontrol start
+    zmcontrol status
+####
+Now Start The Zimber Services.
+#
+#
+Automatic Fixed Problem using zmfixperms
+#
+####
+    /opt/zimbra/libexec/zmfixperms -e -v
+####
+Check Mailbox Size in Zimbra User
+####
 su – zimbra
 
 #zmprov gmi user@maildomain
