@@ -1,5 +1,5 @@
 #
-# How To Manage User Account With CLI In Zimbra Mail Server
+# Manage Zimbra Mail Server Using Command Line
 #
 
 # Check IP Information using command
