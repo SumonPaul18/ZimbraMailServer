@@ -163,78 +163,75 @@ Use This Command For Query All Accounts in My Zimbra Server.
 List all accounts in zimbra. This is additional.
 ####
     zmaccts
-
-+++++++++++++++++++++++++++++++++++
-+ Check Audit Log in Zimbra User  +
-+++++++++++++++++++++++++++++++++++
-
-tail -f /opt/zimbra/log/audit.log | grep user@domain.com
-
--------------------------------
-Create a new files you can name it allmailboxsize.sh or what ever you wanted then paste this. Make sure you have logged in as zimbra
-
-#!/bin/bash
-all_account=`zmprov -l gaa`;
-for account in ${all_account}
-do
+#
+Check Audit Log in Zimbra User
+#
+####
+    tail -f /opt/zimbra/log/audit.log | grep user@domain.com
+####
+Create a new files you can name it <b> allmailboxsize.sh</b> or what ever you wanted then paste this. Make sure you have logged in as zimbra
+####
+Create a shell file and paste bellow codes.
+####
+    nano allmailboxsize.sh
+####
+    #!/bin/bash
+    all_account=`zmprov -l gaa`;
+    for account in ${all_account}
+    do
     mb_size=`zmmailbox -z -m ${account} gms`;
     echo "Mailbox size of ${account} = ${mb_size}";
-done
-Change the permission and run the script.
-# chmod 755 allmailboxsize.sh
-# ./allmailboxsize.sh
------------------------------------
-
-#Get all user's mailbox size from CLI
-https://wiki.zimbra.com/wiki/Get_all_user%27s_mailbox_size_from_CLI
-
-----------------X------------------
-#just create a new files you can name it checkmailsize.sh or what ever you wanted then paste this
-
-#!/bin/bash
-all_account=`zmprov gaa`;
-for account in ${all_account}
-do
+    done
+####
+Change the permission and run the script:
+####
+    chmod 755 allmailboxsize.sh
+    ./allmailboxsize.sh
+#
+#
+Get all user's mailbox size from CLI<br>
+<i>Reffernce:</i> https://wiki.zimbra.com/wiki/Get_all_user%27s_mailbox_size_from_CLI <br>
+just create a new files you can name it checkmailsize.sh or what ever you wanted then paste this
+####
+Create a shell file and paste bellow codes:
+####
+nano checkmailsize.sh
+####
+    #!/bin/bash
+    all_account=`zmprov gaa`;
+    for account in ${all_account}
+    do
     mb_size=`zmmailbox -z -m ${account} gms`;
     echo "Mailbox size of ${account} = ${mb_size}";
-done
-# su zimbra
-
-# vim checkmailsize.sh
-
-# chmod 755
-
-# ./checkmailsize.sh
-
-----------------------X------------------
-
-#Convert Size to Human-Readable Format:
-
-zmmailbox -z -m user@example.com gms | awk '/mailbox size/{print $3/1024/1024 " MB"}'
-
-#Managing spam mails in Zimbra mail server
-
-https://sathisharthars.wordpress.com/2013/11/11/managing-spam-mails-in-zimbra-mail-server/
-
------------------X--------------------
-#Deleting messages from account using the CLI
-
-#The bellow command will search a specific folder, Inbox in this case. Displays only messages dated 01/01/2024. Lists up to 50 messages.
-
-zmmailbox -z -m user@domain.com s -t message -l 50 "in:inbox date:01/01/2024"
-
-#You will see something like the following after issuing the above command:
-
-Id	Type	From	Subject	Date
-
-#delete now specific msgid 431
-
-zmmailbox -z -m admin@william3.us.zimbralab.com deleteMessage 431
-
-
------------------X--------------------
-
-#Restrict Admin View Email
-
-https://wiki.zimbra.com/wiki/Restrict_Admin_%27View_Mail%27
-
+    done
+####
+    su zimbra
+####
+    chmod 755
+####
+    ./checkmailsize.sh
+#
+#
+Convert Size to Human-Readable Format:
+####
+    zmmailbox -z -m user@example.com gms | awk '/mailbox size/{print $3/1024/1024 " MB"}'
+####
+Managing spam mails in Zimbra mail server <br>
+<i>Reffernce:</i>https://sathisharthars.wordpress.com/2013/11/11/managing-spam-mails-in-zimbra-mail-server/
+#
+Deleting messages from account using the CLI <br>
+The bellow command will search a specific folder, Inbox in this case. Displays only messages dated 01/01/2024. Lists up to 50 messages.
+####
+    zmmailbox -z -m user@domain.com s -t message -l 50 "in:inbox date:01/01/2024"
+####
+You will see something like the following after issuing the above command:<br>
+Id	Type	From	Subject	Date <br>
+####
+Delete Now Specific msgid 431
+####
+    zmmailbox -z -m admin@william3.us.zimbralab.com deleteMessage 431
+#
+####
+Restrict Admin View Email <br>
+<i>Reffernce:</i>https://wiki.zimbra.com/wiki/Restrict_Admin_%27View_Mail%27
+--
