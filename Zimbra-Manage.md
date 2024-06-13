@@ -1,61 +1,61 @@
+#
+# How To Manage User Account With CLI In Zimbra Mail Server
+#
 
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-+ How To Manage User Account With CLI In Zimbra Mail Server  +
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-#Check IP Information using command
-
+# Check IP Information using command
 curl ipinfo.io/ip
-
-#switch zimbra user
-
-su zimbra
-
-#check status
-
-zmcontrol status
-
-#Create a single email account.
-#Syntax:
-#zmprov ca <email_address> <password>
-
-zmprov ca sumon@mydomain.com 123456
-
-#Delete Zimbra users from CLI.
-#Syntax:
-#zmprov da <email_address>
-
-zmprov da sumon@mydomain.com
-
-#Change user password from CLI
-
-zmprov sp sumon@mydomain.com 1234567%$123Abc
-
-#Check mail queue in zimbra:
-
-mailq
-
+####
+Switch to Zimbra User
+####
+    su zimbra
+####
+Check Status
+####
+    zmcontrol status
+####
+Create a single email account: <br>
+Syntax:<br>
+zmprov ca <email_address> <password>
+####
+    zmprov ca sumon@mydomain.com 123456
+####
+Delete Zimbra users from CLI:<br>
+Syntax:<br>
+zmprov da <email_address><br>
+####
+    zmprov da sumon@mydomain.com
+####
+Change user password from CLI
+####
+    zmprov sp sumon@mydomain.com 1234567%$123Abc
+####
+Check mail queue in zimbra:
+####
+    mailq
+<br>
 or
 
-postqueue -p
-
+####
+    postqueue -p
+<br>
 or 
 
-/opt/zimbra/common/sbin/postqueue -p
-
-#All queue mail re-queue:
-
-postqueue -f
-
+####
+    /opt/zimbra/common/sbin/postqueue -p
+####
+All queue mail re-queue:
+####
+    postqueue -f
+####
 or
-
-#In Zimbra
-
-/opt/zimbra/common/sbin/postsuper -r ALL
-
-#purge mail queue:
-
-postsuper -d
+####
+In Zimbra
+####
+    /opt/zimbra/common/sbin/postsuper -r ALL
+####
+Purge Mail Queue:
+####
+    postsuper -d
 
 postsuper -d [message id
 
