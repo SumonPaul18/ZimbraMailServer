@@ -75,11 +75,11 @@ Run this command as Root User
 ####
     /opt/zimbra/common/sbin/mailq |grep shakil.hossen@reverie-bd.com|awk {'print $1'} |grep -v @ | tr -d '*!'|/opt/zimbra/common/sbin/postsuper -d -
 ####
-OR
+or
 ####
     /opt/zimbra/common/sbin/postqueue -p | tail -n +2 | awk 'BEGIN { RS = "" } /shakil.hossen@reverie-bd.com/ { print $1 }' | tr -d '*' | /opt/zimbra/common/sbin/postsuper -d -
 ####
-OR
+or
 ####
     /opt/zimbra/common/sbin/postqueue -p |egrep -v '^ *\(|-Queue ID-' | awk 'BEGIN { RS = "" } { if ($7 == "shakil.hossen@reverie-bd.com") print $1} '| tr -d '*!'| /opt/zimbra/common/sbin/postsuper -d -
 ####
@@ -142,27 +142,27 @@ Automatic Fixed Problem using zmfixperms
 Check Mailbox Size in Zimbra User
 ####
 su – zimbra
-
-#zmprov gmi user@maildomain
-
-zmprov gmi sathish@www.sathish.com
-
-#To check User mailbox Size information in detail. 
-#show only mailbox size
-
-zmmailbox -z -m testuser@example.com gms 
-
-#show specific directory size in detail
-
-zmmailbox -z -m testuser@example.com gaf 
-
-#use this command for query all accounts in my Zimbra server.
-
-zmprov -l gaa 
-
-#List all accounts in zimbra. This is additional.
-
-zmaccts
+####
+zmprov gmi user@maildomain
+####
+    zmprov gmi sathish@www.sathish.com
+####
+To check User mailbox Size information in detail. <br>
+Show only mailbox size
+####
+    zmmailbox -z -m testuser@example.com gms 
+####
+Show Specific Directory Size in Detail
+####
+    zmmailbox -z -m testuser@example.com gaf 
+####
+Use This Command For Query All Accounts in My Zimbra Server.
+####
+    zmprov -l gaa 
+####
+List all accounts in zimbra. This is additional.
+####
+    zmaccts
 
 +++++++++++++++++++++++++++++++++++
 + Check Audit Log in Zimbra User  +
