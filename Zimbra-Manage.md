@@ -39,7 +39,7 @@ or
 ####
     /opt/zimbra/common/sbin/postqueue -p
 ####
-All queue mail re-queue:
+All queued mail re-queue:
 ####
     postqueue -f
 ####
@@ -71,7 +71,7 @@ Identified Compromissed Mail User
     cat /var/log/zimbra.log | sed -n 's/.*sasl_username=//p' | sort | uniq -c | sort -n
 ####
 Delete specific user queue mail:<br>
-Run this command as Root User 
+<b>Run this command as Root User</b>
 ####
     /opt/zimbra/common/sbin/mailq |grep shakil.hossen@reverie-bd.com|awk {'print $1'} |grep -v @ | tr -d '*!'|/opt/zimbra/common/sbin/postsuper -d -
 ####
