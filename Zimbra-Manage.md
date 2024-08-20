@@ -61,10 +61,9 @@ Purge all Mail Queue:
 ####
     postsuper -d ALL
 ####
-Find out spaming mail generated users 
+Find Out Spaming Mail Generated User List
 
-#./postqueue -p | awk ‘/sathish@www.sathish.com/ {print $1}’ > /tmp/x
-#./postsuper -d  < /tmp/x
+    mailq | awk '/sathish@www.sathish.com/ {print $1}' | xargs -n1 postsuper -d
 ####
 Identified Compromissed Mail User
 ####
