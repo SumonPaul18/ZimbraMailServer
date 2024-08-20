@@ -61,11 +61,11 @@ Purge all Mail Queue:
 ####
     postsuper -d ALL
 ####
-Find Out Spaming Mail Generated User List
+Find Out Spaming Mail Generated User
 
-    mailq | awk '/sathish@www.sathish.com/ {print $1}' | xargs -n1 postsuper -d
+    mailq | awk '/usermail@maildomain/ {print $1}' | xargs -n1 postsuper -d
 ####
-Identified Compromissed Mail User
+Identified Compromised User List
 ####
     cat /var/log/zimbra.log | sed -n 's/.*sasl_username=//p' | sort | uniq -c | sort -n
 ####
