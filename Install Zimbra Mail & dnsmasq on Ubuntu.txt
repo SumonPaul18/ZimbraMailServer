@@ -1,0 +1,391 @@
+
+## Install Zimbra Mail Server on Ubuntu
+
+
+1st Add Record in Domain Cpanel <br>
+If your Cloudflare so add record in your Cloudflare DNS <br>
+Go to DNS Management <br>
+Type Hostname to Points Public IP <br>
+1. Add A Record 
+Type - Name - IP Address 
+A - mail - 109.119.19.278
+
+2. Add MX record
+Type - Name - Mail Server - TTL - Priority
+MX - @ - mail.iotlogy.xyz - Auto - 10 
+
+#Check DNS & MX record from globally:
+#After add in dns record then check resolved over internet. like: (nslookup,mxtoolsbox,dnscheck etc.) 
+
+#Check DNS & MX record from locally in mail server:
+dig iotlogy.xyz mx
+dig iotlogy.xyz any
+
+host -t mx iotlogy.xyz
+host -t a mail.iotlogy.xyz
+
+#Now working on mail server
+ip a
+hostname
+hostname -f
+cat /etc/lsb-release
+cat /etc/hosts
+
+#Every mail server for need a local DNS server like Dnsmasq or Bind DNS.
+#If your mail server in public ip so don't need to configure DNS server.
+#But, If your mail server in local ip you must need to configure DNS Server.
+
+#We can configure DNS server 2 ways.
+1. SplitDNS
+2. dnsmasq
+
+#Split dns server like a properly same as a dns server install and configure bind packages.
+
+# dnsmasq (DNS masquerade) is a lightweight, easy to configure DNS forwarder. It can serve the names of local machines which are not in the global DNS.So you can use dnsmasq INSTEAD of bind following these instructions.
+
+IMPORTANT: Do not install Zimbra dnscache, which will cause conflict with Split DNS.
+
+#Disable systemd-resolved
+
+systemctl disable systemd-resolved.service
+systemctl stop systemd-resolved
+
+#Install dnsmasq
+
+apt install dnsmasq -y
+
+systemctl status dnsmasq
+systemctl start dnsmasq
+systemctl enable dnsmasq
+
+#Configure dnsmasq
+
+#Take a backup dnsmasq configuration file.
+
+cp /etc/dnsmasq.conf /etc/dnsmasq.conf.bac
+
+nano /etc/dnsmasq.conf
+
+#Add following lines
+
+server=8.8.8.8
+domain=iotlogy.xyz
+mx-host=iotlogy.xyz,mail.iotlogy.xyz,10
+listen-address=::1,127.0.0.1
+address=/iotlogy.xyz/127.0.0.1
+address=/iotlogy.xyz/192.168.0.82
+#additional settings
+#host-record=iotlogy.xyz,192.168.205.11
+#host-record=mail.iotlogy.xyz,192.168.205.11
+
+#Check dnsmasq syntax
+dnsmasq --test
+
+#Restart dnsmasq
+systemctl restart dnsmasq
+
+#Edit /etc/resolv.conf
+
+tee /etc/resolv.conf << END
+nameserver 127.0.0.1
+END
+
+#To prevent the overwriting the resolv.conf
+#we are going to set the immutable attribute to our file using the chattr command
+
+chattr +i /etc/resolv.conf
+
+#Check if everything is right with lsattr command
+
+lsattr /etc/resolv.conf
+
+#Edit /etc/hosts file
+#YOUR_LOCAL_IP  mail.yourdomain.com mail
+
+192.168.0.82 mail.iotlogy.xyz mail
+
+#Restart dnsmasq
+systemctl restart dnsmasq
+
+#Check DNS & MX record from locally in mail server:
+dig iotlogy.xyz mx
+dig iotlogy.xyz any
+dig +short MX iotlogy.xyz
+dig +short A iotlogy.xyz
+
+host -t mx iotlogy.xyz
+host -t a mail.iotlogy.xyz
+
+#Now Install Zimbra
+
+#Change directory where store zimbra installation source files.
+cd /opt
+
+#Download Zimbra source file from zimbra website.
+wget https://files.zimbra.com/downloads/8.8.15_GA/zcs-8.8.15_GA_4179.UBUNTU20_64.20211118033954.tgz
+
+#extract for tar file
+tar zxvf zcs-8.8.15
+
+#rename the extracted file because name is long
+mv zcs-8.8.15 zcs        
+
+#change directory which extarced
+cd /opt/zcs
+ls
+
+#run this shell file
+./install.sh
+
+#License Agreement >				
+Yes
+
+#Zimbra's Package repository >		
+Yes
+
+#Would you like to delete before installing	
+No
+
+#Install Zimbra Ldap >		
+Yes
+
+#Install zimbra-logger >
+yes
+
+#Install zimbra-mta >
+y
+
+#Install zimbra-dnscache >
+no
+
+#Install zimbra-snmp >
+yes
+
+#Install zimbra-store >
+yes
+
+#Install zimbra-apache >
+yes
+
+#Install zimbra-spell >
+yes
+
+#Install zimbra-memcached >
+yes
+
+#Install zimbra-proxy >
+yes
+
+#Install zimbra-drive >
+yes
+
+#Install zimbra-imapd >
+no
+
+#Install zimbra-chat >
+yes
+
+#The system will be modified continue >
+Yes
+
+##Now take some times for installation:
+
+
+##At a moment installation is finish then configure using option number:
+#Address unconfigured (**) items  (? - help)
+
+#go to zimbra store for press 7 >
+7
+#chnage admin password for press 4 >
+4
+
+#there are no changes so back previous menu
+#Select, or 'r' for previous menu [r] 
+r
+##if have any change from main menu, if not so press a
+#Select from menu, or press 'a' to apply config (? - help)
+a
+
+#Save configuration data to a file? [Yes]
+yes
+
+#Save config in file: [/opt/zimbra/config.175078]
+enter
+
+#The system will be modified - continue? [No]
+yes
+
+##Take some time for zimbra configuration
+
+#Notify Zimbra of your installation? [Yes] 
+n
+
+#Configuration complete - press return to exit
+enter
+++++++++++++++++++++++++ Zimbra Installation Complete ++++++++++++++++++++++++++++++
+
+++++++++++++++++++++++++++++++++++
++ Verifying Zimbra Configuration +
+++++++++++++++++++++++++++++++++++
+su - zimbra
+zmcontrol status
+
+#use the following command to check the version of zimbra
+zmcontrol -v
+
+#Note: If services are not started, you can type:
+zmcontrol start
+or 
+zmcontrol restart
+
+## Now access zimbra web portal
+https://yourip:7071
+https://zimbra.iotlogy.xyz:7071
+user: admin
+or 
+user: admin@paulco.xyz
+pass: as your password
+
+## Now access zimbra web portal from browser
+## Now Zimbra Installation and Configuration is complete, now create users.
+## But if we send mail to global domain without spaming, then need to some configuration SPF, DKIM, DMARC  record.
+
+++++++++++++++++++++++++++++++++++++++++
++ Zimbra Uses Deafult Ports:           +
+++++++++++++++++++++++++++++++++++++++++
+Reference: 
+https://wiki.zimbra.com/wiki/Ports
+#External connections ports:
+25, 80, 110, 143, 443, 465, 587, 993, 995
+#Port for secure access to the administrator console.
+7071 
+#Port for accessing internal HTTP services.
+8080 
+#Port for accessing internal HTTPS services.
+8443 
+
+++++++++++++++++++++++++++++++++++++++++
++ Manageing Zimbra Mail Server         +
+++++++++++++++++++++++++++++++++++++++++
+zmhostname
+zmaccts
+zmvolume --list
+
+
+++++++++++++++++++++++++++++++++++++++++
++ Troubleshooting:                     +
+++++++++++++++++++++++++++++++++++++++++
+#Log Check:
+journalctl -xe
+
+1#. Error: Zimbra Modern ui Access Error 404
+Solution:
+su zimbra
+zmprov mcf zimbraModernWebClientDisabled TRUE
+zmcontrol restart
+
+
+++++++++++++++++++++++++++++++++++++++++
++ Uninstall Zimbra on linux            +
+++++++++++++++++++++++++++++++++++++++++
+As root:
+1) Run the commands:
+su – zimbra
+zmcontrol stop
+exit
+(you should be root after you run exit)
+
+2) Run the command: 
+ps -ef | grep -i zimbra
+
+#If you see running processes
+3) Kill any lingering processes: 
+kill -9 <pid>
+
+4) Run the command: 
+df
+
+#If you see "amavisd"
+
+5) run command: 
+umount /opt/zimbra/amavisd<-new-blah>/tmp
+
+#Go to zimbra source file location:
+6) cd /opt/zcs/
+
+7) Run the command: ./install.sh -u
+
+8) Run the following commands to complete the unistall:
+rm -rf /opt/zimbra
+rm -rf /var/log/*zimbra*
+rm -rf /tmp/*zimbra*
+rm -rf /tmp/hsperfdata*
+rm -rf /tmp/install.*
+rm -rf /tmp/*swatch*
+rm -rf /tmp/log*
+
+Ensure that you removed ALL the files owned by the user zimbra AND that contain the name "zimbra" in:
+/var/log/
+/tmp/
+
+7) Run the following commands to delete the users and groups:
+userdel zimbra
+userdel postfix
+groupdel zimbra
+groupdel postfix
+
+8) Remove the line "/dev/shm /opt/zimbra/amavisd-new-2.4.1/tmp tmpfs defaults,users,size=150m,mode=777 0 0" from /etc/fstab.
+
+9) Remove the Zimbra logging lines below from /etc/syslog.conf:
+local0.* -/var/log/zimbra.log
+auth.* -/var/log/zimbra.log
+mail.* -/var/log/zimbra.log
+
+10) Remove logrotate config file for Zimbra (CentOS, RHEL)
+rm -f /etc/logrotate.d/zimbra
+
+11) Remove the Zimbra lines below from /etc/prelink.conf (CentOS, RHEL)
+# added for Zimbra
+-l /opt/zimbra/lib
+-l /opt/zimbra/sleepycat/lib
+-l /opt/zimbra/openldap/lib
+-l /opt/zimbra/cyrus-sasl/lib
+-l /opt/zimbra/mysql/lib
+
+12) Remove Zimbra entries in /etc/rc* (CentOS, RHEL)
+chkconfig --del zimbra
+
+Other methods:(assuming you didn't already try the above)
+(dijichi2) if you get stuck and really want to just purge it from the system, try:
+rpm -e `rpm -qa |grep zimbra`
+rm -rf /opt/zimbra
+delete zimbra entries from /etc/sudoers
+delete zimbra entries from root and zimbra crontabs
+
+On Ubuntu servers dpkg may think that Zimbra is still installed. Check by running dpkg --list (-l) or dpkg -q zimbra* and see if zimbra items are still listed. You can remove them by running:
+dpkg --remove zimbra-apache zimbra-ldap zimbra-mta zimbra-spell zimbra-core zimbra-logger zimbra-snmp zimbra-store or
+
+sudo rm -r /opt/zimbra
+++++++++++++++++ Zimbra Uninstallation Complete +++++++++++++++++++++
+
+#check runing service with service port
+nmap localhost
+
+#check running service
+ps -aux |grep ldap
+
+#kill specefic service
+kill -9 2135
+
++++++++++++++++ Thank You +++++++++++++++
+
+
+
+
+
+
+
+
+
+
+

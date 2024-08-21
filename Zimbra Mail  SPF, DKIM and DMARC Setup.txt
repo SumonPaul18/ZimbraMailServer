@@ -1,0 +1,33 @@
+## How to Setup SPF, DKIM, & DMARC for Zimbra Mail.
+
+This setup to do on  two location, 1st location are on mail server and 2nd are on domain control panel this 2nd option it's could be differnt kind of based on your dns server (on-promises dns server, hosting dns server, cloudflare, Domain control panel etc.).
+
+Here, i'll used cloudflare for dns server. In my observation, the cloudflare are best from another dns server and easy to use. 
+
+#Setup DKIM:
+>go mail server:
+su zimbra
+/opt/zimbra/libexec/zmdkimkeyutil -a -d yourdomain.com
+
+#You will observe something like the next (with your own information):
+
+DKIM Data added to LDAP for domain iotlogy.xyz with selector 3912BBEE-2E9B-11EE-9B2D-A14A7CCA2044
+Public signature to enter into DNS:
+3912BBEE-2E9B-11EE-9B2D-A14A7CCA2044._domainkey IN      TXT     ( "v=DKIM1; k=rsa; "
+          "p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyfk/hfGy7V/Ee0jrBOrSON1SUseGeHyxIk3kXSHBYpFW8v7Yyhf5Uu3kbFklfZOEAL3FCK8BoCdUzjWRKjxdB0TzPHn2CkKgJ13ANNEdBqpXBaaPHCItfZrECEelcwU/gLRR+YNr30iHQLLqpnp+w+O9sfwk8nR638Y6IhKBv+5wwiRHcGiisSSwBM/TiD3Xz+nvHbExuZE5/A"
+          "lu1MCQ1y+SRo55I8QLT/zwxJzhcaGrO2jSBQW0RVkkQfVTYhdcvkzq3f/gIXP8V+yOGBXV9+rUq56eOKSkfxj3yZ0Js2rAQ9vaW8pFbHCWZDqG5sC6zbhy7KW1I+imFA3Mj7ZfwQIDAQAB" )  ; ----- DKIM key 3912BBEE-2E9B-11EE-9B2D-A14A7CCA2044 for iotlogy.xyz
+      
+# copy after "dns:" to ")" this portion and paste on a textnote then now remove "()" and remove all double quotes(") make for single line text.
+
+>go to DNS Server it's my (cloudflare)
+>go to my domain
+>dns
+>add record
+>type=txt, name=3912BBEE-2E9B-11EE-9B2D-A14A7CCA2044._domainkey, content=v=DKIM1; k=rsa; p=MIIBIjANBgk......
+>save
+
+## Check DKIM Record:
+> https://mxtoolbox.com/dkim.aspx
+> http://dkimcore.org/tools/keycheck.html
+
+##Ref: https://wiki.zimbra.com/wiki/Best_Practices_on_Email_Protection:_SPF,_DKIM_and_DMARC
