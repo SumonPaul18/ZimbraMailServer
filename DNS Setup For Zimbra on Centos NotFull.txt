@@ -1,0 +1,86 @@
+#set hostname
+mail
+ 
+#install bind for dns server
+yum install -y bind*
+
+vim /etc/named.conf
+#write or edit bellow line:
+
+listen-on port 53 { 127.0.0.1; 192.168.200.9; };
+allow-query { localhost; 192.168.200.0/24; };
+
+vim /etc/named.rfc1912.zones
+#Last line add new zone:
+#Create Forward Zone
+
+	zone "kumudini.com" IN {
+		type master;
+		file "/var/named/forward.zone";
+		allow-update { none; };
+		};
+
+#Create Reverse Zone
+	zone "200.168.192.in-addr.arpa" IN {
+		type master
+		file "/var/named/reverse.zone";
+		allow-update { none; };
+		};
+
+#Now Create .zone file
+
+vim /var/named/forward.zone
+#paste forward zone create text
+
+vim /var/named/reverse.zone
+#paste reverse zone create text
+
+vim /etc/hosts
+192.168.200.9 dns kumudini.com dns.kumudini.com
+
+vim /etc/resolv.conf
+nameserver 192.168.200.9
+
+service named restart
+systemctl restart named.service
+
+#check nslookup:
+
+dig mail.kumudini.com mx
+
+nslookup
+>kumudini.com
+>mail server ip
+
+
+#now install zimbra
+
+#pre-install zimbra
+
+systemctl stop postfix.service
+systemctl mask postfix.service
+systemctl mask sendmail.service
+
+#Firewall configure
+
+firewall-cmd --permanent --add-port=22/tcp
+firewall-cmd --permanent --add-port=53/tcp
+firewall-cmd --permanent --add-port=53/udp
+firewall-cmd --permanent --add-port=25/tcp
+firewall-cmd --permanent --add-port=80/tcp
+firewall-cmd --permanent --add-port=110/tcp
+firewall-cmd --permanent --add-port=143/tcp
+firewall-cmd --permanent --add-port=389/tcp
+firewall-cmd --permanent --add-port=443/tcp
+firewall-cmd --permanent --add-port=993/tcp
+firewall-cmd --permanent --add-port=995/tcp
+firewall-cmd --permanent --add-port=7025/tcp
+firewall-cmd --reload
+
+firewall-cmd --permanent --add-service=https
+firewall-cmd --permanent --add-service=http
+firewall-cmd --permanent --add-service=ldap
+
+firewall-cmd --reload
+
+

@@ -1,0 +1,253 @@
+
+Zimbra Reference:
+1. https://www.linuxhelp.com/managing-service-commands-in-zimbra (Troubleshoot) 
+
+    #Deploy Zimbra Collaboration Server using Docker
+    1. https://wiki.zimbra.com/wiki/Deploy_Zimbra_Collaboration_using_docker
+    2. https://imanudin.net/2019/11/16/how-to-install-zimbra-on-docker-container/
+
+
+
+#before install zimbra:
+
+#do update
+yum update -y
+
+#check ip
+ifconfig
+
+#edit dns ip in static network configuration
+vi /etc/sysconfig/network-scripts/ifcfg-enp0s3	        - config network manually
+
+>>edit selected network-card change static & add IP info 
+
+BOOTPROTO=static
+
+IPADDR=192.168.1.10
+NETMASK=255.255.255.0
+GATEWAY=192.168.1.1
+DNS1=192.168.1.1
+DNS2=8.8.8.8
+DOMAIN=tecmint.lan
+
+#restart network manager
+systemctl restart NetworkManager
+
+#add hosts
+vi /etc/hosts
+192.168.1.100 ns1.kumudini-pharma.com ns1
+
+#install dns server package
+yum install -y bind*
+
+#edit named.conf
+vi /etc/named.conf
+    #add server ip under options under listen-on section
+    listen-on port 53 { 127.0.0.1; 192.168.3.71; };
+    allow-query { any; };
+    
+#edit dns file
+vi /etc/named.rfc1912.zones
+
+zone "kumudini-pharma.com" IN {
+    type master;
+    file "kumudini.fz";
+    allow-update { none; };
+};
+zone "3.168.192.in-addr.arpa" IN {
+    type master;
+    file "kumudini.rz";
+    allow-update { none; };
+};
+..........................................
+#create forward zone
+vi /var/named/kumudini.fz
+
+@   IN  SOA     kpl.kumudini-pharma.com. root.kumudini-pharma.com. (
+                                                1001    ;Serial
+                                                3H      ;Refresh
+                                                15M     ;Retry
+                                                1W      ;Expire
+                                                1D      ;Minimum TTL
+                                                )
+
+;Name kpl Information
+@      IN  NS      kpl.kumudini-pharma.com.
+
+;IP address of Name ns1
+kpl IN  A       192.168.3.5
+
+;Mail exchanger
+kumudini-pharma.com. IN  MX 10   mail.kumudini-pharma.com.
+
+;A - Record HostName To IP Address
+www     IN  A       192.168.3.5
+mail    IN  A       192.168.3.5
+......................................................
+#create reverse zone
+vi /var/named/kumudini.rz
+
+@   IN  SOA     kpl.kumudini-pharma.com. root.kumudini-pharma.com. (
+                                                1001    ;Serial
+                                                3H      ;Refresh
+                                                15M     ;Retry
+                                                1W      ;Expire
+                                                1D      ;Minimum TTL
+                                                )
+
+;Name ns1 Information
+@ IN  NS      kpl.kumudini-pharma.com.
+
+;Reverse lookup for Name ns1
+5        IN  PTR     kpl.kumudini-pharma.com.
+
+;PTR Record IP address to HostName
+5      IN  PTR     www.kumudini-pharma.com.
+5      IN  PTR     mail.kumudini-pharma.com.
+
+..........................................
+#need to restart named
+systemctl restart named.service
+
+#need to enable named
+systemctl enable named.service
+
+#edit dns ip
+vi /etc/resolv.conf
+nameserver: 192.168.3.71
+nameserver: 8.8.8.8
+
+#check dns
+nslookup
+kumudini-pharma.com
+192.168.3.5
+
+##Let's start install & configure zimbra 
+
+#change directory 
+cd /opt
+
+#download Zimbra Collaboration – Open Source Edition
+#go to zimbra official site under download filup a form and copy link address as your OS version
+
+(For CentOS 7)
+wget https://files.zimbra.com/downloads/8.8.15_GA/zcs-8.8.15_GA_3869.RHEL7_64.20190918004220.tgz
+
+(For CentOS 8)
+wget https://files.zimbra.com/downloads/8.8.15_GA/zcs-8.8.15_GA_3953.RHEL8_64.20200629025823.tgz
+
+#check downloaded file
+ls
+
+#untar or unzip downloded file
+tar xzvfs zcs-8.8.15_GA_3953.RHEL8_64.20200629025823.tgz
+
+#rename untar file cause it's long file name
+mv zcs-8.8.15_GA_3953.RHEL8_64.20200629025823 zimbra
+
+cd /opt/zimbra
+ls
+#executeable the install file
+./install.sh
+
+
+License Agreement				Yes
+
+
+Zimbra's Package repository			Yes
+
+
+Would you like to delete before installing	No
+
+Install Zimbra Ldap				Yes
+
+logger mta dnscache snmp store 
+apache spell memcached proxy drive		Yes
+
+Install zimbra imapd				No
+
+
+Zimbra Chat					Yes
+
+The system will be modified continue		Yes
+
+When Configuration complete - press return to exit is displayed: Enter
+
+
+#Verifying Server Configuration
+
+su - zimbra
+zmcontrol status
+
+#use the following command to check the version of zimbra
+zmcontrol -v
+
+#Note: If services are not started, you can type:
+
+zmcontrol start
+
+#will disabled firewalld
+systemctl stop firewalld.service 
+systemctl disable firewalld.service
+
+#will disabled postfix
+rpm -qa | grep postfix
+systemctl stop postfix.service
+systemctl disable postfix.service
+
+#will disabled sendmaill
+
+
+#will disabled selinux
+getenforce
+vi /etc/selinux/config
+SELINUX=disabled
+
+# need to zimbra restart 
+service zimbra restart 
+
+#need to enable zimbra
+systemctl enable zimbra
+
+##Now access zimbra web portal
+https://mail.kumudini-pharma.com
+admin@kumudini-pharma.com
+zimbra2022
+
+
+##Managing Service Commands in Zimbra
+
+#Command to check zmstat data collectors.
+zmstatctl status
+
+#If you want any service start/stop
+zmstatctl start/stop zmstat-nginx
+
+#Command to check all running status in zimbra.
+zmcontrol status
+
+>If you want any service start/stop
+zmcontrol start/stop ldap
+
+#Command to Start, stop, reload, or find the status of the mailbox components.
+zmmailboxdctl status
+
+#Command to Start, stop, restart, and check the status of the IMAP proxy service
+zmproxyctl status
+
+#Command to Start, stop, reload, or check status of Apache service.
+zmapachectl status
+
+#To check the mysql status of zimbra run below command.
+zmmysql status
+
+#Command to Start, stop, reload,and check status for the anti-virus service.
+zmantivirusctl status
+
+
+
+
+
+
+
+
